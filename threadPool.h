@@ -1,10 +1,15 @@
 #ifndef __THREAD_POOL__
 #define __THREAD_POOL__
 
-#include "osqueue.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include "osqueue.h"
+
+
+#define FAILURE 0
+#define SUCCESS 1
 
 typedef struct thread_pool
 {
@@ -14,7 +19,14 @@ typedef struct thread_pool
      pthread_t* threads;
      struct os_queue* tasksQueue;
      pthread_mutex_t lock;
+     int stopped;
 }ThreadPool;
+
+typedef struct task
+{
+    void (*computeFunc)(void *param);
+    void* param;
+}Task;
 
 ThreadPool* tpCreate(int numOfThreads);
 

@@ -18,11 +18,12 @@ void test_thread_pool_sanity()
    ThreadPool* tp = tpCreate(5);
 
    
-//   for(i=0; i<5; ++i)
-//   {
-//      tpInsertTask(tp,hello,NULL);
-//   }
-//
+   for(i=0; i<5; ++i)
+   {
+      tpInsertTask(tp,hello,NULL);
+   }
+
+   sleep(5);
 //   tpDestroy(tp,1);
 }
 
