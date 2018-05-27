@@ -19,6 +19,7 @@ typedef struct thread_pool
      pthread_t* threads;
      struct os_queue* tasksQueue;
      pthread_mutex_t lock;
+     pthread_mutex_t queueLock;
      int stopped;
      int canInsert;
 }ThreadPool;

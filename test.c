@@ -28,14 +28,14 @@ void test_thread_pool_sanity()
       tpInsertTask(tp,hello,NULL);
    }
 
+
    int x = 17;
     for(i=0; i<5; ++i)
     {
         tpInsertTask(tp,myTest,(void *)&x);
     }
 
-   sleep(20);
-//   tpDestroy(tp,1);
+   tpDestroy(tp,1);
 }
 
 
