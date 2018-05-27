@@ -10,6 +10,11 @@ void hello (void* a)
    printf("hello\n");
 }
 
+void myTest(void* a) {
+    int* p_num = (int*)a;
+    printf("myTest: %d\n",*p_num);
+}
+
 
 void test_thread_pool_sanity()
 {
@@ -23,7 +28,13 @@ void test_thread_pool_sanity()
       tpInsertTask(tp,hello,NULL);
    }
 
-   sleep(5);
+   int x = 17;
+    for(i=0; i<5; ++i)
+    {
+        tpInsertTask(tp,myTest,(void *)&x);
+    }
+
+   sleep(20);
 //   tpDestroy(tp,1);
 }
 

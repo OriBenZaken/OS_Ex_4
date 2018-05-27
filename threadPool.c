@@ -4,6 +4,12 @@
 
 #include "threadPool.h"
 
+typedef struct task
+{
+    void (*computeFunc)(void *param);
+    void* param;
+}Task;
+
 void* execute(void* args) {
     ThreadPool* tp = (ThreadPool*)args;
     struct os_queue* taskQueue = tp->tasksQueue;
@@ -40,6 +46,7 @@ ThreadPool* tpCreate(int numOfThreads) {
     tp->tasksQueue = osCreateQueue();
     pthread_mutex_init(&(tp->lock), NULL);
     tp->stopped = 0;
+    tp->canInsert = 0;
 
     int i, err;
     for (i = 0; i < tp->numOfThreads; i++) {
@@ -50,7 +57,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 }
 
 int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* param) {
-    if (threadPool->stopped) {
+    if (!(threadPool->canInsert)) {
         return FAILURE;
     }
 
@@ -67,4 +74,21 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* par
     return SUCCESS;
 }
 
+void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
+    threadPool->canInsert = 0;
 
+    if (shouldWaitForTasks) {
+        while (!osIsQueueEmpty(threadPool->tasksQueue));
+        int i, err;
+        for (i = 0; i < threadPool->numOfThreads; i++) {
+            err = pthread_join(threadPool->threads[i], NULL);
+            if (err != 0) {
+                printf("Failure: waiting for thread no. %d\n", i);
+            }
+        }
+    }
+
+    threadPool->stopped = 1;
+
+    //free memory
+}

@@ -20,13 +20,8 @@ typedef struct thread_pool
      struct os_queue* tasksQueue;
      pthread_mutex_t lock;
      int stopped;
+     int canInsert;
 }ThreadPool;
-
-typedef struct task
-{
-    void (*computeFunc)(void *param);
-    void* param;
-}Task;
 
 ThreadPool* tpCreate(int numOfThreads);
 
