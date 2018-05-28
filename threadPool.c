@@ -17,7 +17,18 @@ void* execute(void* args) {
     struct os_queue* taskQueue = tp->tasksQueue;
     printf("New thread was created\n");
 
-    while (!tp->stopped && !(tp->canInsert == 0 && osIsQueueEmpty(tp->tasksQueue))) {
+    /* Lock must be taken to wait on conditional variable */
+    pthread_mutex_lock(&(tp->queueLock));
+
+    /* Wait on condition variable, check for spurious wakeups.
+       When returning from pthread_cond_wait(), we own the lock. */
+    if((osIsQueueEmpty(taskQueue)) && (!tp->stopped)) {
+        printf("Busy waiting\n");
+        pthread_cond_wait(&(tp->notify), &(tp->queueLock));
+    }
+    pthread_mutex_unlock(&(tp->queueLock));
+
+    while (!tp->stopped && !(tp->canInsert == 0 && osIsQueueEmpty(taskQueue))) {
 //        if (osIsQueueEmpty(tp->tasksQueue)) {
 //            //printf("locked\n");
 //            pthread_mutex_lock(&(tp->queueLock));
@@ -28,13 +39,15 @@ void* execute(void* args) {
             pthread_mutex_unlock(&(tp->lock));
             task->computeFunc(task->param);
             free(task);
+            //pthread_mutex_unlock(&(tp->queueLock));
         }
         else {
             pthread_mutex_unlock(&(tp->lock));
-            //pthread_mutex_lock(&(tp->queueLock));
-            sleep(1);
+            //sleep(1);
         }
     }
+
+
 }
 
 ThreadPool* tpCreate(int numOfThreads) {
@@ -55,8 +68,11 @@ ThreadPool* tpCreate(int numOfThreads) {
     pthread_mutex_init(&(tp->lock), NULL);
     tp->stopped = 0;
     tp->canInsert = 1;
+
+    //todo: check success
     pthread_mutex_init(&(tp->queueLock), NULL);
     //pthread_mutex_lock(&(tp->queueLock));
+    pthread_cond_init(&(tp->notify), NULL);
 
     int i, err;
     for (i = 0; i < tp->numOfThreads; i++) {
@@ -79,26 +95,42 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* par
 
     task->computeFunc = computeFunc;
     task->param = param;
-    int queueWasEmpty = 0;
-    if (osIsQueueEmpty(threadPool->tasksQueue)) {
-        queueWasEmpty = 1;
-    }
 
     osEnqueue(threadPool->tasksQueue, (void *)task);
 
-//    if (queueWasEmpty) {
-//        pthread_mutex_unlock(&(threadPool->queueLock));
+    pthread_mutex_lock(&(threadPool->queueLock));
+    if(pthread_cond_signal(&(threadPool->notify)) != 0) {
+        //todo: print error
+    }
+    pthread_mutex_unlock(&(threadPool->queueLock));
+//    if(pthread_mutex_unlock(&threadPool->queueLock) != 0) {
+//        //todo: print error
 //    }
+
     return SUCCESS;
 }
 
 void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
     threadPool->canInsert = 0;
 
+
+
     if (shouldWaitForTasks == 0) {
         threadPool->stopped = 1;
     }
     int i, err;
+
+    if(pthread_mutex_lock(&(threadPool->queueLock)) != 0) {
+        //todo: print err
+    }
+    /* Wake up all worker threads */
+    if((pthread_cond_broadcast(&(threadPool->notify)) != 0) ||
+       (pthread_mutex_unlock(&(threadPool->queueLock)) != 0)) {
+        //todo: print err
+        printf("Exit due failure in tpDestory\n");
+        exit(1);
+    }
+
     for (i = 0; i < threadPool->numOfThreads; i++) {
         err = pthread_join(threadPool->threads[i], NULL);
         if (err != 0) {
@@ -110,7 +142,7 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
     threadPool->stopped = 1;
 
     while (!osIsQueueEmpty(threadPool->tasksQueue)) {
-        printf("Task was erased from tasks queu\n");
+        printf("Task was erased from tasks queue\n");
         Task* task = osDequeue(threadPool->tasksQueue);
         free(task);
     }

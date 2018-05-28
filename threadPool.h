@@ -8,7 +8,7 @@
 #include "osqueue.h"
 
 
-#define FAILURE 0
+#define FAILURE -1
 #define SUCCESS 1
 
 typedef struct thread_pool
@@ -20,6 +20,7 @@ typedef struct thread_pool
      struct os_queue* tasksQueue;
      pthread_mutex_t lock;
      pthread_mutex_t queueLock;
+     pthread_cond_t notify;
      int stopped;
      int canInsert;
 }ThreadPool;
