@@ -18,10 +18,10 @@ void* execute(void* args) {
     printf("New thread was created\n");
 
     while (!tp->stopped && !(tp->canInsert == 0 && osIsQueueEmpty(tp->tasksQueue))) {
-        if (osIsQueueEmpty(tp->tasksQueue)) {
-            printf("locked\n");
-            pthread_mutex_lock(&(tp->queueLock));
-        }
+//        if (osIsQueueEmpty(tp->tasksQueue)) {
+//            //printf("locked\n");
+//            pthread_mutex_lock(&(tp->queueLock));
+//        }
         pthread_mutex_lock(&(tp->lock));
         if (!(osIsQueueEmpty(taskQueue))) {
             Task* task = osDequeue(taskQueue);
@@ -31,6 +31,7 @@ void* execute(void* args) {
         }
         else {
             pthread_mutex_unlock(&(tp->lock));
+            //pthread_mutex_lock(&(tp->queueLock));
             sleep(1);
         }
     }
@@ -55,7 +56,7 @@ ThreadPool* tpCreate(int numOfThreads) {
     tp->stopped = 0;
     tp->canInsert = 1;
     pthread_mutex_init(&(tp->queueLock), NULL);
-    pthread_mutex_lock(&(tp->queueLock));
+    //pthread_mutex_lock(&(tp->queueLock));
 
     int i, err;
     for (i = 0; i < tp->numOfThreads; i++) {
@@ -85,9 +86,9 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* par
 
     osEnqueue(threadPool->tasksQueue, (void *)task);
 
-    if (queueWasEmpty) {
-        pthread_mutex_unlock(&(threadPool->queueLock));
-    }
+//    if (queueWasEmpty) {
+//        pthread_mutex_unlock(&(threadPool->queueLock));
+//    }
     return SUCCESS;
 }
 
@@ -109,6 +110,7 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
     threadPool->stopped = 1;
 
     while (!osIsQueueEmpty(threadPool->tasksQueue)) {
+        printf("Task was erased from tasks queu\n");
         Task* task = osDequeue(threadPool->tasksQueue);
         free(task);
     }
@@ -116,7 +118,7 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
     osDestroyQueue(threadPool->tasksQueue);
     free(threadPool->threads);
     pthread_mutex_destroy(&(threadPool->lock));
-    pthread_mutex_destroy(&(threadPool->queueLock));
+    //pthread_mutex_destroy(&(threadPool->queueLock));
     free(threadPool);
 
 

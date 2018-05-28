@@ -1,31 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "osqueue.h"
+#include <pthread.h>
 #include "threadPool.h"
 
 
 void hello (void* a)
 {
    printf("hello\n");
+   sleep(1);
 }
 
 void myTest(void* a) {
     int* p_num = (int*)a;
     printf("myTest: %d\n",*p_num);
+    sleep(3);
 }
 
 
 void test_thread_pool_sanity()
 {
    int i;
-   
+
    ThreadPool* tp = tpCreate(5);
 
-   
-   for(i=0; i<5; ++i)
+
+   for(i=0; i<7; ++i)
    {
-      tpInsertTask(tp,hello,NULL);
+        sleep(2);
+       tpInsertTask(tp,hello,NULL);
    }
 
 
@@ -34,6 +37,7 @@ void test_thread_pool_sanity()
     {
         tpInsertTask(tp,myTest,(void *)&x);
     }
+    sleep(2);
 
    tpDestroy(tp,1);
 }
