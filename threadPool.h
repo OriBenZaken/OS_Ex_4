@@ -9,7 +9,8 @@
 
 
 #define FAILURE -1
-#define SUCCESS 1
+#define SUCCESS 0
+#define DONT_WAIT_FOR_TASKS 0
 
 typedef struct thread_pool
 {
@@ -25,10 +26,27 @@ typedef struct thread_pool
      int canInsert;
 }ThreadPool;
 
+/**
+ * creates a thread pool struct.
+ * @param numOfThreads number of threads in the thread pool.
+ * @return reference to new thread pool struct if succeeded, NULL if failed.
+ */
 ThreadPool* tpCreate(int numOfThreads);
 
+/**
+ * Destroys the thread pool.
+ * @param threadPool thread pool
+ * @param shouldWaitForTasks 0 - dont wait for tasks in the queue, else - wait for tasks.
+ */
 void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks);
 
+/**
+ * inserts a task to the tasks queue of the thread pool.
+ * @param threadPool thread pool
+ * @param computeFunc task
+ * @param param argument to the task
+ * @return 0- success , -1 - fail
+ */
 int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* param);
 
 #endif

@@ -47,9 +47,8 @@ void  function2Sleep();
     return 0;
 }*/
 
-//todo: test fails
 //דסטרוי רגיל, חשוב לשים לב שכל הפונקציות מסתיימות לפני הדסטרוי
-/*int main() {
+int main() {
     ThreadPool *threadPool = tpCreate(3);
     char *args = (char *) malloc(10);
 
@@ -61,7 +60,7 @@ void  function2Sleep();
     int temp;
     scanf("%d", &temp);
     return 0;
-}*/
+}
 
 
 
