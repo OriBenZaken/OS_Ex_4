@@ -1,6 +1,4 @@
-//
-// Created by ori on 5/26/18.
-//
+// Name: Ori Ben zaken , ID: 311492110
 
 #include <fcntl.h>
 #include "threadPool.h"
@@ -33,17 +31,18 @@ void* execute(void* args) {
     struct os_queue* taskQueue = tp->tasksQueue;
     printf("New thread was created\n");
 
-    /* Lock must be taken to wait on conditional variable */
-    pthread_mutex_lock(&(tp->queueLock));
-
-    /* Wait on condition variable, check for spurious wakeups.
-       When returning from pthread_cond_wait(), we own the lock. */
-    if((osIsQueueEmpty(taskQueue)) && (!tp->stopped)) {
-        pthread_cond_wait(&(tp->notify), &(tp->queueLock));
-    }
-    pthread_mutex_unlock(&(tp->queueLock));
-
     while (!tp->stopped && !(tp->canInsert == 0 && osIsQueueEmpty(taskQueue))) {
+        /* Lock must be taken to wait on conditional variable */
+        pthread_mutex_lock(&(tp->queueLock));
+
+        /* Wait on condition variable, check for spurious wakeups.
+           When returning from pthread_cond_wait(), we own the lock. */
+        if((osIsQueueEmpty(taskQueue)) && (!tp->stopped)) {
+            printf("Busy\n");
+            pthread_cond_wait(&(tp->notify), &(tp->queueLock));
+        }
+        pthread_mutex_unlock(&(tp->queueLock));
+
         pthread_mutex_lock(&(tp->lock));
         if (!(osIsQueueEmpty(taskQueue))) {
             // take task from the queue
@@ -176,7 +175,7 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks) {
     }
     int i, err;
 
-    pthread_mutex_lock(&(threadPool->queueLock);
+    pthread_mutex_lock(&(threadPool->queueLock));
 
     /* Wake up all worker threads */
     if((pthread_cond_broadcast(&(threadPool->notify)) != 0) ||
