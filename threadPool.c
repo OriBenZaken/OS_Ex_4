@@ -64,7 +64,7 @@ void* execute(void* args) {
  * @return reference to new thread pool struct if succeeded, NULL if failed.
  */
 ThreadPool* tpCreate(int numOfThreads) {
-/*    int out = open("output",  O_CREAT | O_TRUNC | O_WRONLY, 0644);
+    int out = open("output",  O_CREAT | O_TRUNC | O_WRONLY, 0644);
     if (out == -1) {
         printf("Failed to open output file\n");
         printErrorInSysCallToSTDERR();
@@ -75,7 +75,7 @@ ThreadPool* tpCreate(int numOfThreads) {
         printf("Failed to operate dup2 for out\n");
         printErrorInSysCallToSTDERR();
         exit(SYS_CALL_FAILURE);
-    }*/
+    }
 
     ThreadPool* tp = (ThreadPool*)malloc(sizeof(ThreadPool));
     if (tp == NULL) {
